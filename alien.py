@@ -2,7 +2,7 @@
 Author: Janet Portillo
 Course: CSCI-1511 – Python Programming
 Professor: Walters
-Assignment: Alien Invasion – Part 2 (Unit 7)
+Assignment: Alien Invasion – Part 2 
 Date: July 2026
 
 Description:
@@ -15,33 +15,28 @@ import pygame
 from pygame.sprite import Sprite
 
 class Alien(Sprite):
-    """A class representing a single alien in the fleet."""
+    """Class representing a single alien."""
 
     def __init__(self, ai_game):
         super().__init__()
         self.screen = ai_game.screen
         self.settings = ai_game.settings
 
-        # Load the alien image and set its rect attribute
-        self.image = pygame.image.load('images/alien.bmp')
+        self.image = pygame.image.load("Assets/images/alien.png")
         self.rect = self.image.get_rect()
 
-        # Start each alien near the top-left of the screen
+        # Start near top-left
         self.rect.x = self.rect.width
         self.rect.y = self.rect.height
 
-        # Store the alien's exact horizontal position
         self.x = float(self.rect.x)
 
-    def check_edges(self):
-        """Return True if alien is at the screen edge."""
-        screen_rect = self.screen.get_rect()
-        return (
-            self.rect.right >= screen_rect.right or
-            self.rect.left <= 0
-        )
-
     def update(self):
-        """Move the alien right or left."""
-        self.x += self.settings.fleet_speed * self.settings.fleet_direction
+        """Move alien left or right."""
+        self.x += self.settings.alien_speed * self.settings.fleet_direction
         self.rect.x = self.x
+
+    def check_edges(self):
+        """Return True if alien hits screen edge."""
+        screen_rect = self.screen.get_rect()
+        return self.rect.right >= screen_rect.right or self.rect.left <= 0
