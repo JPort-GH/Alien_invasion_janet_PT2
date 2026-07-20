@@ -3,7 +3,7 @@ Author: Janet Portillo
 GitHub: JPort-GH
 Course: CSCI-1511 – Python Programming
 Professor: Walters
-Assignment: Alien Invasion – Part 2 (Unit 7)
+Assignment: Alien Invasion – Part 2
 Date: 07.12.2026
 
 Description:
