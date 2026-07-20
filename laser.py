@@ -1,32 +1,34 @@
-# Name: Janet Portillo
-# GitHub: JPort-GH
-# Date: 07.12.2026
-
+"""
+Author: Janet Portillo
+Course: CSCI-1511 – Python Programming
+Professor: Walters
+Assignment: Alien Invasion – Part 2 
+Date: July 2026
+"""
 import pygame
+from pygame.sprite import Sprite
 
-class Laser(pygame.sprite.Sprite):
-    """Laser fired by the ship."""
+class Laser(Sprite):
+    """A class to manage lasers fired from the ship."""
 
     def __init__(self, ai_game):
         super().__init__()
         self.screen = ai_game.screen
         self.settings = ai_game.settings
+        self.color = (255, 0, 0)
 
-        self.image = pygame.image.load("Assets/images/laser.png")
-        self.rect = self.image.get_rect()
-
-        # Start laser at ship position
+        self.rect = pygame.Rect(
+            0, 0, self.settings.bullet_width, self.settings.bullet_height
+        )
         self.rect.midtop = ai_game.ship.rect.midtop
 
         self.y = float(self.rect.y)
 
-        # Play laser sound
-        pygame.mixer.Sound(self.settings.laser_sound).play()
-
     def update(self):
-        """Move laser upward."""
+        """Move the laser up the screen."""
         self.y -= self.settings.laser_speed
         self.rect.y = self.y
 
     def draw_laser(self):
-        self.screen.blit(self.image, self.rect)
+        """Draw the laser to the screen."""
+        pygame.draw.rect(self.screen, self.color, self.rect)
