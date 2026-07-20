@@ -1,6 +1,15 @@
-# Name: Janet Portillo
-# GitHub: JPort-GH
-# Date: 07.12.2026
+"""
+Author: Janet Portillo
+GitHub: JPort-GH
+Course: CSCI-1511 – Python Programming
+Professor: Walters
+Assignment: Alien Invasion – Part 2 (Unit 7)
+Date: 07.12.2026
+
+Description:
+This file manages the main game loop, event handling, rendering, and
+fleet-related helper functions for calculating alien grid dimensions.
+"""
 
 import sys
 import pygame
@@ -69,6 +78,25 @@ class AlienInvasion:
                 elif event.key == pygame.K_LEFT:
                     self.ship.moving_left = False
 
+    # -------------------------------------------------------------
+    # Fleet Math Helpers (Unit 7 - Part 2)
+    # -------------------------------------------------------------
+    def _get_number_aliens_x(self, alien_width):
+        """Calculate how many aliens fit in one row."""
+        available_space_x = self.settings.screen_w - (2 * alien_width)
+        number_aliens_x = available_space_x // (2 * alien_width)
+        return number_aliens_x
+
+    def _get_number_rows(self, alien_height, ship_height):
+        """Calculate how many rows of aliens fit on the screen."""
+        available_space_y = (
+            self.settings.screen_h -
+            (3 * alien_height) -
+            ship_height
+        )
+        number_rows = available_space_y // (2 * alien_height)
+        return number_rows
+
     def _fire_laser(self):
         """Create a new laser and add it to the group."""
         new_laser = Laser(self)
@@ -83,6 +111,7 @@ class AlienInvasion:
             laser.draw_laser()
 
         pygame.display.flip()
+
 
 if __name__ == "__main__":
     ai = AlienInvasion()
