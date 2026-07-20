@@ -1,0 +1,36 @@
+# Name: Janet Portillo
+# GitHub: JPort-GH
+# Date: 07.12.2026
+
+import pygame
+
+class Laser(pygame.sprite.Sprite):
+    """Laser fired by the ship."""
+
+    def __init__(self, ai_game):
+        super().__init__()
+        self.screen = ai_game.screen
+        self.settings = ai_game.settings
+
+        self.image = pygame.image.load("Assets/images/laser.png")
+        self.rect = self.image.get_rect()
+
+        # Start laser at ship position
+        self.rect.midtop = ai_game.ship.rect.midtop
+
+        self.y = float(self.rect.y)
+
+        # Play laser sound
+        pygame.mixer.Sound(self.settings.laser_sound).play()
+
+    def update(self):
+        """Move laser upward."""
+        self.y -= self.settings.laser_speed
+        self.rect.y = self.y
+
+    def draw_laser(self):
+        self.screen.blit(self.image, self.rect)
+
+
+
+
