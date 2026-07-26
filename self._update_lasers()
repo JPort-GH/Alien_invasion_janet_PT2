@@ -1,0 +1,5 @@
+def _update_lasers(self):
+    """Remove lasers that have disappeared."""
+    for laser in self.lasers.copy():
+        if laser.rect.bottom <= 0:
+            self.lasers.remove(laser)
