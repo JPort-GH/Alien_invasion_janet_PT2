@@ -1,9 +1,8 @@
 """
 Author: Janet Portillo
-Course: CSCI-1511 – Python Programming
-Professor: Walters
-Assignment: Alien Invasion – Part 2 
-Date: July 2026
+GitHub: JPort-GH
+Program: Alien Invasion - Track 1
+Date: 07.22.2026
 """
 import pygame
 from pygame.sprite import Sprite
