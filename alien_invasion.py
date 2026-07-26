@@ -29,7 +29,7 @@ class AlienInvasion:
         self.screen = pygame.display.set_mode(
             (self.settings.screen_width, self.settings.screen_height)
         )
-        pygame.display.set_caption("Alien Invasion - Janet Portillo")
+        pygame.display.set_caption("Alien Invasion - Track 1")
 
         self.stats = GameStats(self)
         self.sb = Scoreboard(self)
@@ -72,10 +72,10 @@ class AlienInvasion:
 
     def _check_keydown_events(self, event):
         """Respond to keypresses."""
-        if event.key == pygame.K_RIGHT:
-            self.ship.moving_right = True
-        elif event.key == pygame.K_LEFT:
-            self.ship.moving_left = True
+        if event.key == pygame.K_UP:
+            self.ship.moving_up = True
+        elif event.key == pygame.K_DOWN:
+            self.ship.moving_down = True
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
         elif event.key == pygame.K_q:
@@ -83,10 +83,10 @@ class AlienInvasion:
 
     def _check_keyup_events(self, event):
         """Respond to key releases."""
-        if event.key == pygame.K_RIGHT:
-            self.ship.moving_right = False
-        elif event.key == pygame.K_LEFT:
-            self.ship.moving_left = False
+        if event.key == pygame.K_UP:
+            self.ship.moving_up = False
+        elif event.key == pygame.K_DOWN:
+            self.ship.moving_down = False
 
     def _check_play_button(self, mouse_pos):
         """Start a new game when the player clicks Play."""
