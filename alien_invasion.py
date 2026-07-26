@@ -11,15 +11,10 @@ This file manages the main game loop, event handling, rendering, and
 fleet-related helper functions for calculating alien grid positions.
 """
 
-import sys
-from time import sleep
-import pygame
-
-# Correct imports based on your folder structure
-from settings.settings import Settings
-from settings.game_stats import GameStats
-from settings.button import Button
-from settings.scoreboard import Scoreboard
+from settings import Settings
+from game_stats import GameStats
+from button import Button
+from scoreboard import Scoreboard
 
 from ship import Ship
 from bullet import Bullet
