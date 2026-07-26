@@ -6,41 +6,40 @@ Date: 07.22.2026
 """
 
 import pygame
+from pathlib import Path
 
 class Ship:
-    """Class to manage the player's ship."""
+    """A vertically-moving ship positioned on the left side of the screen."""
 
     def __init__(self, ai_game):
+        """Initialize the ship and set its starting position."""
         self.screen = ai_game.screen
         self.settings = ai_game.settings
         self.screen_rect = ai_game.screen.get_rect()
 
-        self.image = pygame.image.load("Assets/images/ship.png")
+        # Load ship image using pathlib
+        self.image = pygame.image.load(self.settings.ship_image)
         self.rect = self.image.get_rect()
 
-        self.rect.midbottom = self.screen_rect.midbottom
+        # Ship starts on the left edge, centered vertically
+        self.rect.midleft = self.screen_rect.midleft
+
+        # Store a float for the ship's vertical position
+        self.y = float(self.rect.y)
 
         # Movement flags
-        self.moving_right = False
-        self.moving_left = False
-
-        # Store float position for smooth movement
-        self.x = float(self.rect.x)
+        self.moving_up = False
+        self.moving_down = False
 
     def update(self):
-        """Move ship left/right."""
-        if self.moving_right and self.rect.right < self.screen_rect.right:
-            self.x += self.settings.ship_speed
-        if self.moving_left and self.rect.left > 0:
-            self.x -= self.settings.ship_speed
+        """Update the ship's position based on movement flags."""
+        if self.moving_up and self.rect.top > 0:
+            self.y -= self.settings.ship_speed
+        if self.moving_down and self.rect.bottom < self.screen_rect.bottom:
+            self.y += self.settings.ship_speed
 
-        self.rect.x = self.x
+        self.rect.y = self.y
 
     def blitme(self):
-        """Draw the ship."""
+        """Draw the ship at its current location."""
         self.screen.blit(self.image, self.rect)
-
-    def center_ship(self):
-        """Center the ship after a hit."""
-        self.rect.midbottom = self.screen_rect.midbottom
-        self.x = float(self.rect.x)
