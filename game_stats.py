@@ -2,8 +2,8 @@
 Author: Janet Portillo
 Course: CSCI-1511 – Python Programming
 Professor: Walters
-Assignment: Alien Invasion – Part 2 
-Date: July 2026
+Assignment: Alien Invasion – Part 3 
+Date: July 22, 2026
 """
 
 class GameStats:
