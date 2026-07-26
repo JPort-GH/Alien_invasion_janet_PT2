@@ -16,7 +16,7 @@ from time import sleep
 
 import pygame
 
-from settings import Settings
+from settings.settings import Settings
 from game_stats import GameStats
 from button import Button
 from scoreboard import Scoreboard
