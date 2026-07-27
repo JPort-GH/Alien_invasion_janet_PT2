@@ -9,6 +9,11 @@ This file manages the main game loop, event handling, rendering, and
 fleet-related helper functions for calculating alien grid positions.
 """
 
+import sys
+from time import sleep, time
+
+import pygame
+
 from settings import Settings
 from game_stats import GameStats
 from button import Button
@@ -33,10 +38,14 @@ class AlienInvasion:
 
         self.stats = GameStats(self)
         self.sb = Scoreboard(self)
+        self.sb.show_status_message("Press Play to begin")
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
+        self.boss_pending = False
+        self.boss_spawn_time = None
+        self.boss_active = False
 
         self._create_fleet()
 
@@ -72,10 +81,10 @@ class AlienInvasion:
 
     def _check_keydown_events(self, event):
         """Respond to keypresses."""
-        if event.key == pygame.K_UP:
-            self.ship.moving_up = True
-        elif event.key == pygame.K_DOWN:
-            self.ship.moving_down = True
+        if event.key == pygame.K_LEFT:
+            self.ship.moving_left = True
+        elif event.key == pygame.K_RIGHT:
+            self.ship.moving_right = True
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
         elif event.key == pygame.K_q:
@@ -83,10 +92,10 @@ class AlienInvasion:
 
     def _check_keyup_events(self, event):
         """Respond to key releases."""
-        if event.key == pygame.K_UP:
-            self.ship.moving_up = False
-        elif event.key == pygame.K_DOWN:
-            self.ship.moving_down = False
+        if event.key == pygame.K_LEFT:
+            self.ship.moving_left = False
+        elif event.key == pygame.K_RIGHT:
+            self.ship.moving_right = False
 
     def _check_play_button(self, mouse_pos):
         """Start a new game when the player clicks Play."""
@@ -95,12 +104,20 @@ class AlienInvasion:
             self.stats.reset_stats()
             self.stats.game_active = True
 
+            self.stats.ammo_left = self.settings.starting_ammo
+            self.stats.reloading = False
+            self.stats.reload_time = 0.0
             self.sb.prep_score()
             self.sb.prep_level()
             self.sb.prep_ships()
+            self.sb.prep_ammo()
+            self.sb.show_status_message("Good luck, destroy the fleet!")
 
             self.aliens.empty()
             self.bullets.empty()
+            self.boss_pending = False
+            self.boss_spawn_time = None
+            self.boss_active = False
 
             self._create_fleet()
             self.ship.center_ship()
@@ -109,12 +126,32 @@ class AlienInvasion:
 
     def _fire_bullet(self):
         """Create a new bullet and add it to the bullets group."""
-        if len(self.bullets) < self.settings.bullets_allowed:
-            new_bullet = Bullet(self)
-            self.bullets.add(new_bullet)
+        if self.stats.reloading:
+            self.sb.show_status_message("Reloading, wait 3 seconds.")
+            return
+
+        if self.stats.ammo_left <= 0:
+            self.stats.game_active = False
+            self.sb.show_status_message(
+                "Game over — you ran out of ammo. Click Play to restart."
+            )
+            pygame.mouse.set_visible(True)
+            return
+
+        new_bullet = Bullet(self)
+        self.bullets.add(new_bullet)
+        self.stats.ammo_left -= 1
+        self.sb.prep_ammo()
+        self.sb.show_status_message("Bullet fired!")
 
     def _update_bullets(self):
         """Update bullet positions and remove old bullets."""
+        if self.stats.reloading and time() >= self.stats.reload_time:
+            self.stats.reloading = False
+            self.stats.ammo_left = self.settings.max_ammo
+            self.sb.prep_ammo()
+            self.sb.show_status_message("Reload complete, ammo full.")
+
         self.bullets.update()
 
         for bullet in self.bullets.copy():
@@ -125,21 +162,47 @@ class AlienInvasion:
 
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
-        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, False)
 
+        for alien_list in collisions.values():
+            for alien in alien_list:
+                if not isinstance(alien, Alien):
+                    continue
+
+                alien.hit_points -= 1
+                if alien.hit_points <= 0:
+                    if alien.is_boss:
+                        self.boss_active = False
+                    self.aliens.remove(alien)
+                    self.stats.score += alien.points
+                    if self.stats.ammo_left < self.settings.max_ammo:
+                        self.stats.ammo_left += 1
+                        self.sb.prep_ammo()
+                        self.sb.show_status_message("Ammo Pick-Up!")
+                    elif alien.is_boss:
+                        self.sb.show_status_message("Boss destroyed!")
+                else:
+                    if alien.is_boss:
+                        self.sb.show_status_message(
+                            f"Boss hit, {alien.hit_points} left"
+                        )
         if collisions:
-            for aliens in collisions.values():
-                self.stats.score += self.settings.alien_points * len(aliens)
             self.sb.prep_score()
+            self.sb.prep_ammo()
             self.sb.check_high_score()
 
-        if not self.aliens:
+        if not self.aliens and not self.boss_pending and not self.boss_active:
             self.bullets.empty()
-            self.settings.increase_speed()
-
             self.stats.level += 1
+            self.settings.alien_speed = self.settings.base_alien_speed * self.stats.level
+            self.settings.fleet_drop_speed = self.settings.base_fleet_drop_speed * self.stats.level
             self.sb.prep_level()
-
+            self.sb.show_status_message(
+                f"Level {self.stats.level}! Incredible work!",
+                message_color=self.settings.accent_color,
+                flash=True,
+            )
+            self.boss_pending = True
             self._create_fleet()
 
     def _update_aliens(self):
@@ -167,20 +230,42 @@ class AlienInvasion:
 
     def _ship_hit(self):
         """Respond to the ship being hit by an alien."""
-        if self.stats.ships_left > 0:
-            self.stats.ships_left -= 1
-            self.sb.prep_ships()
-
-            self.aliens.empty()
-            self.bullets.empty()
-
-            self._create_fleet()
-            self.ship.center_ship()
-
-            sleep(0.5)
-        else:
+        if self.stats.ships_left <= 0:
             self.stats.game_active = False
+            self.sb.show_status_message(
+                "Game over — you died. Click Play to restart."
+            )
             pygame.mouse.set_visible(True)
+            return
+
+        self.stats.ships_left -= 1
+        self.sb.prep_ships()
+
+        self.aliens.empty()
+        self.bullets.empty()
+        self.boss_pending = False
+        self.boss_spawn_time = None
+        self.boss_active = False
+        self.ship.center_ship()
+
+        if self.stats.ships_left <= 0:
+            self.stats.game_active = False
+            self.sb.show_status_message(
+                "Game over — you died. Click Play to restart."
+            )
+            pygame.mouse.set_visible(True)
+            return
+
+        if self.stats.ships_left == 1:
+            self.sb.show_status_message("One life remaining, stay sharp!")
+        else:
+            self.sb.show_status_message(
+                f"Ship lost, {self.stats.ships_left} lives remaining."
+            )
+
+        self._create_fleet()
+        pygame.display.flip()
+        sleep(0.5)
 
     def _check_aliens_bottom(self):
         """Check if any aliens reach the bottom."""
@@ -192,27 +277,63 @@ class AlienInvasion:
 
     def _create_fleet(self):
         """Create the fleet of aliens."""
-        alien = Alien(self)
-        alien_width, alien_height = alien.rect.size
+        sample_alien = Alien(self)
+        normal_width, normal_height = sample_alien.rect.size
 
-        available_space_x = self.settings.screen_width - (2 * alien_width)
-        number_aliens_x = available_space_x // (2 * alien_width)
+        base_rows = [6, 4, 2, 1]
+        row_counts = base_rows.copy()
+        for level_number in range(2, self.stats.level + 1):
+            row_counts = [6 + 2 * (level_number - 1)] + row_counts
+        row_spacing = 14
+        y = self.settings.hud_padding + 140
 
-        ship_height = self.ship.rect.height
-        available_space_y = self.settings.screen_height - (3 * alien_height) - ship_height
-        number_rows = available_space_y // (2 * alien_height)
+        for row_index, count in enumerate(row_counts):
+            if row_index == 0:
+                if self.boss_pending:
+                    boss = Alien(self, boss=True)
+                    boss.rect.x = (self.settings.screen_width - boss.rect.width) / 2
+                    boss.rect.y = int(y)
+                    boss.x = float(boss.rect.x)
+                    self.aliens.add(boss)
+                    self.boss_pending = False
+                    self.boss_active = True
+                    y += boss.rect.height + row_spacing
+                    continue
 
-        for row in range(number_rows):
-            for alien_number in range(number_aliens_x):
-                self._create_alien(alien_number, row)
+                boss = Alien(self, boss=True)
+                boss.rect.x = (self.settings.screen_width - boss.rect.width) / 2
+                boss.rect.y = int(y)
+                boss.x = float(boss.rect.x)
+                self.aliens.add(boss)
+                y += boss.rect.height + row_spacing
+                continue
 
-    def _create_alien(self, alien_number, row):
-        """Create an alien and place it in the row."""
-        alien = Alien(self)
-        alien_width, alien_height = alien.rect.size
-        alien.x = alien_width + 2 * alien_width * alien_number
-        alien.rect.x = alien.x
-        alien.rect.y = alien_height + 2 * alien_height * row
+            if count == 1:
+                x = (self.settings.screen_width - normal_width) / 2
+                self._create_alien_at(x, y)
+                y += normal_height + row_spacing
+                continue
+
+            if count <= 1:
+                x = (self.settings.screen_width - normal_width) / 2
+                self._create_alien_at(x, y)
+                y += normal_height + row_spacing
+                continue
+
+            spacing = max(6, (self.settings.screen_width - self.settings.hud_padding * 2 - count * normal_width) / (count - 1))
+            total_width = count * normal_width + (count - 1) * spacing
+            start_x = (self.settings.screen_width - total_width) / 2
+            for alien_number in range(count):
+                x = start_x + alien_number * (normal_width + spacing)
+                self._create_alien_at(x, y)
+            y += normal_height + row_spacing
+
+    def _create_alien_at(self, x, y, boss=False):
+        """Create an alien at the given position."""
+        alien = Alien(self, boss=boss)
+        alien.rect.x = int(x)
+        alien.rect.y = int(y)
+        alien.x = float(alien.rect.x)
         self.aliens.add(alien)
 
     def _update_screen(self):
