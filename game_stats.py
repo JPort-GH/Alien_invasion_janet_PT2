@@ -24,4 +24,7 @@ class GameStats:
         self.ships_left = self.settings.ship_limit
         self.score = 0
         self.level = 1
+        self.ammo_left = self.settings.starting_ammo
+        self.reload_time = 0.0
+        self.reloading = False
 
