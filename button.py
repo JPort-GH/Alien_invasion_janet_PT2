@@ -16,10 +16,11 @@ class Button:
         self.screen_rect = self.screen.get_rect()
 
         # Set the dimensions and properties of the button.
-        self.width, self.height = 200, 50
-        self.button_color = (0, 255, 0)
-        self.text_color = (255, 255, 255)
-        self.font = pygame.font.SysFont(None, 48)
+        self.width, self.height = 220, 58
+        self.button_color = ai_game.settings.button_color
+        self.text_color = ai_game.settings.button_text_color
+        self.border_color = ai_game.settings.button_border_color
+        self.font = pygame.font.SysFont(None, 46)
 
         # Build the button's rect object and center it.
         self.rect = pygame.Rect(0, 0, self.width, self.height)
@@ -34,6 +35,7 @@ class Button:
         self.msg_image_rect.center = self.rect.center
 
     def draw_button(self):
-        """Draw blank button and then draw message."""
-        self.screen.fill(self.button_color, self.rect)
+        """Draw the button with a contrast-friendly border."""
+        pygame.draw.rect(self.screen, self.border_color, self.rect, 3)
+        pygame.draw.rect(self.screen, self.button_color, self.rect.inflate(-6, -6))
         self.screen.blit(self.msg_image, self.msg_image_rect)
