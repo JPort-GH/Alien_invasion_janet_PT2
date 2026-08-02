@@ -2,16 +2,15 @@
 Author: Janet Portillo
 GitHub: JPort-GH
 Program: Alien Invasion - Track 1
-Date: 07.22.2026
-
-Description: Horizontal laser fired from left-side ship.
+Purpose: Define the horizontal bullet fired from the ship.
 """
 
 import pygame
 from pygame.sprite import Sprite
 
+
 class Bullet(Sprite):
-    """A bullet fired vertically from the ship."""
+    """A bullet fired horizontally from the ship."""
 
     def __init__(self, ai_game):
         """Create a bullet at the ship's current position."""
@@ -20,16 +19,15 @@ class Bullet(Sprite):
         self.settings = ai_game.settings
         self.color = self.settings.bullet_color
 
-        self.rect = pygame.Rect(0, 0, self.settings.bullet_width,
-                                self.settings.bullet_height)
-        self.rect.midbottom = ai_game.ship.rect.midtop
+        self.rect = pygame.Rect(0, 0, self.settings.bullet_width, self.settings.bullet_height)
+        self.rect.midleft = ai_game.ship.rect.midright
 
-        self.y = float(self.rect.y)
+        self.x = float(self.rect.x)
 
     def update(self):
-        """Move the bullet vertically upward."""
-        self.y -= self.settings.bullet_speed
-        self.rect.y = self.y
+        """Move the bullet horizontally to the right."""
+        self.x += self.settings.bullet_speed
+        self.rect.x = self.x
 
     def draw_bullet(self):
         """Draw the bullet to the screen."""
